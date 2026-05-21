@@ -32,19 +32,16 @@ public sealed class MixamoCharacterMaterialBinder : MonoBehaviour
     {
         if (bodyMaterial == null)
         {
-            bodyMaterial = CreateMaterial(
-                "Beetlejuice Body Material",
-                BodyTexturePath,
-                BodyNormalPath);
+            bodyMaterial = CreateMaterial("Beetlejuice Body Material", BodyTexturePath, BodyNormalPath);
         }
 
         if (headMaterial == null)
         {
-            headMaterial = CreateMaterial(
-                "Beetlejuice Head Material",
-                HeadTexturePath,
-                HeadNormalPath);
+            headMaterial = CreateMaterial("Beetlejuice Head Material", HeadTexturePath, HeadNormalPath);
         }
+
+        ForceOpaqueDoubleSided(bodyMaterial);
+        ForceOpaqueDoubleSided(headMaterial);
 
         var renderers = GetComponentsInChildren<Renderer>(true);
         if (renderers == null || renderers.Length == 0)
@@ -59,15 +56,15 @@ public sealed class MixamoCharacterMaterialBinder : MonoBehaviour
         }
     }
 
-    private static Material CreateMaterial(
-        string materialName,
-        string albedoResourcePath,
-        string normalResourcePath)
+    private static Material CreateMaterial(string materialName, string albedoResourcePath, string normalResourcePath)
     {
         var material = new Material(Shader.Find("Standard"))
         {
-            name = materialName
+            name = materialName,
+            color = Color.white
         };
+
+        ForceOpaqueDoubleSided(material);
 
         var albedo = Resources.Load<Texture2D>(albedoResourcePath);
         if (albedo != null)
@@ -87,13 +84,32 @@ public sealed class MixamoCharacterMaterialBinder : MonoBehaviour
         return material;
     }
 
+    private static void ForceOpaqueDoubleSided(Material material)
+    {
+        if (material == null)
+        {
+            return;
+        }
+
+        material.color = Color.white;
+        material.SetFloat("_Mode", 0f);
+        material.SetOverrideTag("RenderType", "Opaque");
+        material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+        material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
+        material.SetInt("_ZWrite", 1);
+        material.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
+        material.DisableKeyword("_ALPHATEST_ON");
+        material.DisableKeyword("_ALPHABLEND_ON");
+        material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+        material.renderQueue = -1;
+    }
+
     private static bool IsBodyRenderer(Renderer renderer, int rendererIndex)
     {
         var rendererName = renderer != null ? renderer.name : string.Empty;
         var meshName = string.Empty;
 
-        if (renderer is SkinnedMeshRenderer skinnedMeshRenderer &&
-            skinnedMeshRenderer.sharedMesh != null)
+        if (renderer is SkinnedMeshRenderer skinnedMeshRenderer && skinnedMeshRenderer.sharedMesh != null)
         {
             meshName = skinnedMeshRenderer.sharedMesh.name;
         }
@@ -127,11 +143,7 @@ public sealed class MixamoCharacterMaterialBinder : MonoBehaviour
         return rendererIndex == 0;
     }
 
-    private static void AssignMaterial(
-        Renderer renderer,
-        Material material,
-        Material head,
-        bool singleRendererFallback)
+    private static void AssignMaterial(Renderer renderer, Material material, Material head, bool singleRendererFallback)
     {
         if (renderer == null || material == null)
         {
@@ -142,13 +154,7 @@ public sealed class MixamoCharacterMaterialBinder : MonoBehaviour
 
         if (singleRendererFallback && materialCount >= 4)
         {
-            renderer.sharedMaterials = new[]
-            {
-                material,
-                head,
-                head,
-                head
-            };
+            renderer.sharedMaterials = new[] { material, head, head, head };
             return;
         }
 
@@ -163,12 +169,9 @@ public sealed class MixamoCharacterMaterialBinder : MonoBehaviour
 
     private static int GetMaterialSlotCount(Renderer renderer)
     {
-        var materialCount = renderer.sharedMaterials != null && renderer.sharedMaterials.Length > 0
-            ? renderer.sharedMaterials.Length
-            : 0;
+        var materialCount = renderer.sharedMaterials != null && renderer.sharedMaterials.Length > 0 ? renderer.sharedMaterials.Length : 0;
 
-        if (renderer is SkinnedMeshRenderer skinnedMeshRenderer &&
-            skinnedMeshRenderer.sharedMesh != null)
+        if (renderer is SkinnedMeshRenderer skinnedMeshRenderer && skinnedMeshRenderer.sharedMesh != null)
         {
             materialCount = Mathf.Max(materialCount, skinnedMeshRenderer.sharedMesh.subMeshCount);
         }
