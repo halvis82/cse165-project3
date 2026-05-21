@@ -35,6 +35,7 @@ public static class Project3RuntimeBootstrap
         cameraObject.transform.localPosition = Vector3.zero;
         cameraObject.transform.localRotation = Quaternion.identity;
         cameraObject.transform.localScale = Vector3.one;
+        QuestCameraPoseUtility.EnsureHeadTrackedCamera(cameraObject);
         var camera = cameraObject.GetComponent<Camera>() ?? cameraObject.AddComponent<Camera>();
         if (cameraObject.GetComponent<AudioListener>() == null) cameraObject.AddComponent<AudioListener>();
         if (cameraObject.GetComponent<ARCameraManager>() == null) cameraObject.AddComponent<ARCameraManager>();
