@@ -1,0 +1,71 @@
+# Exclude Markdown files per request
+*.md
+
+# Local/assignment documents not needed in the code repo
+/CSE 165 - Project 3 - Embodied Agent and AR.pdf
+/design_doc/Project Design Document [Please Make a Copy].pdf
+
+# macOS
+.DS_Store
+*.DS_Store
+
+# Unity generated/cache folders, from repo root or nested Unity project roots
+**/[Ll]ibrary/
+**/[Tt]emp/
+**/[Oo]bj/
+**/[Bb]uild/
+**/[Bb]uilds/
+**/[Ll]ogs/
+**/[Uu]ser[Ss]ettings/
+**/[Mm]emoryCaptures/
+**/[Rr]ecordings/
+
+# Unity/editor generated files
+*.log
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+sysinfo.txt
+mono_crash.*
+
+# Builds / exported packages
+*.apk
+*.aab
+*.unitypackage
+*.unitypackage.meta
+*.app
+ExportedObj/
+.consulo/
+.vs/
+.gradle/
+
+# Unity/Addressables generated content
+**/[Aa]ssets/Plugins/Editor/JetBrains*
+**/[Aa]ssets/AssetStoreTools*
+**/ServerData/
+**/[Aa]ssets/StreamingAssets/aa*
+**/[Aa]ssets/AddressableAssetsData/link.xml*
+**/[Aa]ssets/Addressables_Temp*
+**/[Aa]ssets/AddressableAssetsData/*/*.bin*
+**/[Aa]ssets/Unity.VisualScripting.Generated/
+**/[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# Nested Unity gitattributes replaced by root-level attributes
+/project3/.gitattributes
+
+# Exclude assignment/template PDFs; keep the actual Project3 design PDF
+/design_doc/Project Design Document*.pdf

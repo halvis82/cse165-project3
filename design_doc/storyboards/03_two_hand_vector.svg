@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="360" viewBox="0 0 1400 360">
+  <rect width="1400" height="360" fill="#f8fafc"/>
+  <style>
+    text{font-family:Arial,sans-serif;fill:#182230}
+    .title{font-size:28px;font-weight:bold}
+    .label{font-size:18px}
+    .panel{fill:white;stroke:#bbf7d0;stroke-width:3;rx:18}
+  </style>
+  <text x="30" y="42" class="title">Storyboard 3 - Two-hand vector</text>
+  <g transform="translate(30,70)">
+    <rect class="panel" x="0" y="0" width="310" height="240"/>
+    <circle cx="108" cy="140" r="18" fill="#16a34a"/>
+    <circle cx="208" cy="110" r="18" fill="#16a34a"/>
+    <text x="18" y="32" class="label">1. User raises both hands</text>
+    <text x="18" y="210" class="label">Left hand anchors origin.</text>
+  </g>
+  <g transform="translate(365,70)">
+    <rect class="panel" x="0" y="0" width="310" height="240"/>
+    <circle cx="108" cy="140" r="18" fill="#16a34a"/>
+    <circle cx="238" cy="94" r="18" fill="#16a34a"/>
+    <line x1="108" y1="140" x2="238" y2="94" stroke="#16a34a" stroke-width="8"/>
+    <text x="18" y="32" class="label">2. Right hand defines vector</text>
+    <text x="18" y="210" class="label">Direction follows hand spacing.</text>
+  </g>
+  <g transform="translate(700,70)">
+    <rect class="panel" x="0" y="0" width="310" height="240"/>
+    <line x1="110" y1="150" x2="235" y2="105" stroke="#16a34a" stroke-width="8"/>
+    <polygon points="235,105 213,97 220,120" fill="#16a34a"/>
+    <text x="18" y="32" class="label">3. Release confirms</text>
+    <text x="18" y="210" class="label">Vector becomes destination intent.</text>
+  </g>
+  <g transform="translate(1035,70)">
+    <rect class="panel" x="0" y="0" width="310" height="240"/>
+    <circle cx="205" cy="125" r="24" fill="#16a34a"/>
+    <path d="M80 170 C120 168,160 148,195 130" stroke="#16a34a" stroke-width="6" fill="none" stroke-dasharray="10 10"/>
+    <text x="18" y="32" class="label">4. Agent follows vector</text>
+    <text x="18" y="210" class="label">Precise, but more effortful.</text>
+  </g>
+</svg>

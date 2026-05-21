@@ -1,0 +1,22 @@
+* text=auto
+
+*.cs text diff=csharp
+*.shader text
+*.cginc text
+*.compute text
+
+# Unity YAML/text assets
+*.unity text eol=lf
+*.prefab text eol=lf
+*.asset text eol=lf
+*.meta text eol=lf
+*.mat text eol=lf
+*.controller text eol=lf
+*.anim text eol=lf
+*.overrideController text eol=lf
+*.json text eol=lf
+
+# Binary project assets kept in normal Git because they are small enough for this repo
+*.fbx binary
+*.png binary
+*.pdf binary

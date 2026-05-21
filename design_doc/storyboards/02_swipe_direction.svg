@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="360" viewBox="0 0 1400 360">
+  <rect width="1400" height="360" fill="#f8fafc"/>
+  <style>
+    text{font-family:Arial,sans-serif;fill:#182230}
+    .title{font-size:28px;font-weight:bold}
+    .label{font-size:18px}
+    .panel{fill:white;stroke:#fecaca;stroke-width:3;rx:18}
+  </style>
+  <text x="30" y="42" class="title">Storyboard 2 - Directional swipe</text>
+  <g transform="translate(30,70)">
+    <rect class="panel" x="0" y="0" width="310" height="240"/>
+    <circle cx="80" cy="170" r="24" fill="#ef4444"/>
+    <text x="18" y="32" class="label">1. User raises open palm</text>
+    <text x="18" y="210" class="label">System enters command-ready state.</text>
+  </g>
+  <g transform="translate(365,70)">
+    <rect class="panel" x="0" y="0" width="310" height="240"/>
+    <path d="M110 145 C145 120,190 120,235 120" stroke="#ef4444" stroke-width="10" fill="none"/>
+    <polygon points="235,120 214,106 214,134" fill="#ef4444"/>
+    <text x="18" y="32" class="label">2. User swipes right</text>
+    <text x="18" y="210" class="label">Motion vector becomes command.</text>
+  </g>
+  <g transform="translate(700,70)">
+    <rect class="panel" x="0" y="0" width="310" height="240"/>
+    <line x1="90" y1="150" x2="235" y2="150" stroke="#ef4444" stroke-width="8"/>
+    <polygon points="235,150 214,136 214,164" fill="#ef4444"/>
+    <text x="18" y="32" class="label">3. Arrow preview appears</text>
+    <text x="18" y="210" class="label">User sees interpreted direction.</text>
+  </g>
+  <g transform="translate(1035,70)">
+    <rect class="panel" x="0" y="0" width="310" height="240"/>
+    <circle cx="200" cy="150" r="24" fill="#ef4444"/>
+    <path d="M80 170 C120 170,150 160,190 150" stroke="#ef4444" stroke-width="6" fill="none" stroke-dasharray="10 10"/>
+    <text x="18" y="32" class="label">4. Agent moves rightward</text>
+    <text x="18" y="210" class="label">Fast, but easier to mis-trigger.</text>
+  </g>
+</svg>
