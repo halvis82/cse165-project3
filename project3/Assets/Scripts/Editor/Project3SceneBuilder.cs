@@ -95,7 +95,7 @@ public static class Project3SceneBuilder
     [MenuItem("CSE165 Project 3/Build Quest APK")]
     public static void BuildQuestApk()
     {
-        ConfigureQuestOpenXR();
+        RebuildScene();
         EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Android, BuildTarget.Android);
 
         var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
