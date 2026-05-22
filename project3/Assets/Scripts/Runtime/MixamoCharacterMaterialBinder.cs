@@ -70,6 +70,16 @@ public sealed class MixamoCharacterMaterialBinder : MonoBehaviour
             return;
         }
 
+        // Force the genuinely double-sided unlit shader. A material that came
+        // from the baked scene may still be on Standard, whose hidden Cull Back
+        // would render the ripped mesh inside-out. Switching shaders preserves
+        // the _MainTex/_Color values since both use the same property names.
+        var doubleSided = Shader.Find("CSE165/DoubleSidedUnlit");
+        if (doubleSided != null && material.shader != doubleSided)
+        {
+            material.shader = doubleSided;
+        }
+
         material.color = Color.white;
         Project3MaterialUtility.ConfigureVisibility(material, false);
     }

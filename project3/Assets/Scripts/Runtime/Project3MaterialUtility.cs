@@ -19,7 +19,13 @@ public static class Project3MaterialUtility
 
     public static Material CreateUnlitTexture(string materialName, Texture texture)
     {
-        var shader = Shader.Find("Standard") ?? Shader.Find("Unlit/Texture") ?? Shader.Find("Sprites/Default");
+        // Prefer the custom double-sided unlit shader so the ripped character
+        // mesh (inverted winding) renders its outward faces. Standard's hidden
+        // Cull Back would otherwise cull them, showing the interior back faces.
+        var shader = Shader.Find("CSE165/DoubleSidedUnlit")
+                     ?? Shader.Find("Unlit/Texture")
+                     ?? Shader.Find("Standard")
+                     ?? Shader.Find("Sprites/Default");
         var material = new Material(shader)
         {
             name = materialName,

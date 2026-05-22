@@ -12,7 +12,7 @@ public sealed class SpatialAnchorSurfaceAuthoring : MonoBehaviour
     [SerializeField] private Material wallMaterial;
     [SerializeField] private Material anchorMaterial;
     [SerializeField] private float minimumPlaneAreaSquareMeters = 0.35f;
-    [SerializeField] private int maximumWallCount = 4;
+    [SerializeField] private int maximumWallCount = 16;
     [SerializeField] private bool autoCaptureFloor = true;
     [SerializeField] private bool autoCaptureWalls = true;
 
@@ -44,6 +44,7 @@ public sealed class SpatialAnchorSurfaceAuthoring : MonoBehaviour
         floorMaterial = floor;
         wallMaterial = wall;
         anchorMaterial = anchor;
+        maximumWallCount = Mathf.Max(maximumWallCount, 16);
 
         if (planeManager != null)
         {
@@ -52,6 +53,22 @@ public sealed class SpatialAnchorSurfaceAuthoring : MonoBehaviour
             {
                 planeManager.planesChanged += HandlePlanesChanged;
             }
+        }
+    }
+
+    // Re-evaluate every currently tracked plane. Called after the USE_SCENE
+    // permission is granted, since planes that existed before the grant are
+    // not re-delivered through planesChanged.
+    public void Rescan()
+    {
+        if (planeManager == null)
+        {
+            return;
+        }
+
+        foreach (var plane in planeManager.trackables)
+        {
+            TryCapturePlane(plane);
         }
     }
 
@@ -103,12 +120,15 @@ public sealed class SpatialAnchorSurfaceAuthoring : MonoBehaviour
         var worldCenter = plane.transform.TransformPoint(localCenter);
         var anchorPose = new Pose(worldCenter, plane.transform.rotation);
         var anchor = CreateAnchor(plane, anchorPose);
-        if (anchor == null)
-        {
-            return false;
-        }
 
-        var proxy = CreateProxySurface(anchor.transform, plane, kind);
+        // If the anchor service is unavailable, still build the collider and
+        // parent it to the plane itself so the room surface is never dropped.
+        // The anchor sits at the plane center, so its local offset is zero;
+        // the plane transform sits at its own origin, so offset to the center.
+        var anchored = anchor != null;
+        var proxyRoot = anchored ? anchor.transform : plane.transform;
+        var localOffset = anchored ? Vector3.zero : localCenter;
+        var proxy = CreateProxySurface(proxyRoot, localOffset, plane, kind);
         capturedPlanes.Add(plane.trackableId);
         capturedSurfaces.Add(proxy);
 
@@ -208,17 +228,21 @@ public sealed class SpatialAnchorSurfaceAuthoring : MonoBehaviour
 
     private SpatialSurfaceProxy CreateProxySurface(
         Transform anchorRoot,
+        Vector3 localOffset,
         ARPlane plane,
         SpatialSurfaceKind kind)
     {
         var proxy = GameObject.CreatePrimitive(PrimitiveType.Cube);
         proxy.name = kind == SpatialSurfaceKind.Floor ? "Anchored Floor Proxy" : "Anchored Wall Proxy";
         proxy.transform.SetParent(anchorRoot, false);
-        proxy.transform.localPosition = Vector3.zero;
+        proxy.transform.localPosition = localOffset;
         proxy.transform.localRotation = Quaternion.identity;
+        // Walls are thickened to 0.12 m so the CharacterController (skin width
+        // ~0.08 m) collides solidly instead of tunneling through a thin slab.
+        var thickness = kind == SpatialSurfaceKind.Wall ? 0.12f : 0.02f;
         proxy.transform.localScale = new Vector3(
             Mathf.Max(0.05f, plane.size.x),
-            0.02f,
+            thickness,
             Mathf.Max(0.05f, plane.size.y));
 
         var surfaceProxy = proxy.AddComponent<SpatialSurfaceProxy>();
@@ -233,7 +257,7 @@ public sealed class SpatialAnchorSurfaceAuthoring : MonoBehaviour
         var anchorMarker = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         anchorMarker.name = "Anchor Marker";
         anchorMarker.transform.SetParent(anchorRoot, false);
-        anchorMarker.transform.localPosition = Vector3.zero;
+        anchorMarker.transform.localPosition = localOffset;
         anchorMarker.transform.localScale = Vector3.one * 0.06f;
 
         var markerCollider = anchorMarker.GetComponent<Collider>();

@@ -54,7 +54,7 @@ public static class Project3RuntimeBootstrap
         var surfaceAuthoringObject = new GameObject("Spatial Anchor Surface Authoring");
         var surfaceAuthoring = surfaceAuthoringObject.AddComponent<SpatialAnchorSurfaceAuthoring>();
         surfaceAuthoring.Configure(planeManager, anchorManager, materialSet.Floor, materialSet.Wall, materialSet.Anchor);
-        CreateFallbackRoomProxies(surfaceAuthoring, materialSet.Floor, materialSet.Wall);
+        EnsureScenePermissionRequester(surfaceAuthoring);
 
         var gestureObject = new GameObject("Gesture Command Router");
         var gestureRouter = gestureObject.AddComponent<GestureCommandRouter>();
@@ -84,7 +84,7 @@ public static class Project3RuntimeBootstrap
         var planeManager = Object.FindObjectOfType<ARPlaneManager>();
         var anchorManager = Object.FindObjectOfType<ARAnchorManager>();
         surfaceAuthoring.Configure(planeManager, anchorManager, materialSet.Floor, materialSet.Wall, materialSet.Anchor);
-        CreateFallbackRoomProxies(surfaceAuthoring, materialSet.Floor, materialSet.Wall);
+        EnsureScenePermissionRequester(surfaceAuthoring);
         Debug.Log($"Project3 runtime repaired. Registered surfaces: floors={surfaceAuthoring.FloorCount}, walls={surfaceAuthoring.WallCount}.");
 
         EnsureCharacterMaterials();
@@ -277,87 +277,18 @@ public static class Project3RuntimeBootstrap
         panel.Configure(camera, gestures, surfaces, agent, textMesh);
     }
 
-    private static void CreateFallbackRoomProxies(
-        SpatialAnchorSurfaceAuthoring surfaceAuthoring,
-        Material floorMaterial,
-        Material wallMaterial)
+    private static void EnsureScenePermissionRequester(SpatialAnchorSurfaceAuthoring surfaceAuthoring)
     {
-        if (surfaceAuthoring == null || GameObject.Find("Fallback Room Proxies") != null)
+        if (surfaceAuthoring == null)
         {
             return;
         }
 
-        var root = new GameObject("Fallback Room Proxies");
-        CreateFallbackRoomPrimitive(
-            "Fallback Floor Proxy",
-            root.transform,
-            new Vector3(0f, -0.01f, 2f),
-            new Vector3(5f, 0.02f, 5f),
-            floorMaterial,
-            SpatialSurfaceKind.Floor,
-            surfaceAuthoring);
-        CreateFallbackRoomPrimitive(
-            "Fallback Back Wall Proxy",
-            root.transform,
-            new Vector3(0f, 1f, 4.5f),
-            new Vector3(5f, 2f, 0.05f),
-            wallMaterial,
-            SpatialSurfaceKind.Wall,
-            surfaceAuthoring);
-        CreateFallbackRoomPrimitive(
-            "Fallback Left Wall Proxy",
-            root.transform,
-            new Vector3(-2.5f, 1f, 2f),
-            new Vector3(0.05f, 2f, 5f),
-            wallMaterial,
-            SpatialSurfaceKind.Wall,
-            surfaceAuthoring);
-        CreateFallbackRoomPrimitive(
-            "Fallback Right Wall Proxy",
-            root.transform,
-            new Vector3(2.5f, 1f, 2f),
-            new Vector3(0.05f, 2f, 5f),
-            wallMaterial,
-            SpatialSurfaceKind.Wall,
-            surfaceAuthoring);
-        CreateFallbackRoomPrimitive(
-            "Fallback Front Wall Proxy",
-            root.transform,
-            new Vector3(0f, 1f, -0.5f),
-            new Vector3(5f, 2f, 0.05f),
-            wallMaterial,
-            SpatialSurfaceKind.Wall,
-            surfaceAuthoring);
-    }
-
-    private static void CreateFallbackRoomPrimitive(
-        string name,
-        Transform parent,
-        Vector3 position,
-        Vector3 scale,
-        Material material,
-        SpatialSurfaceKind kind,
-        SpatialAnchorSurfaceAuthoring surfaceAuthoring)
-    {
-        var primitive = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        primitive.name = name;
-        primitive.transform.SetParent(parent, false);
-        primitive.transform.position = position;
-        primitive.transform.localRotation = Quaternion.identity;
-        primitive.transform.localScale = scale;
-
-        var proxy = primitive.AddComponent<SpatialSurfaceProxy>();
-        proxy.Configure(kind, default);
-
-        var renderer = primitive.GetComponent<Renderer>();
-        if (renderer != null)
-        {
-            renderer.sharedMaterial = material;
-            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            renderer.receiveShadows = false;
-        }
-
-        surfaceAuthoring.RegisterFallbackSurface(proxy);
+        var existing = Object.FindObjectOfType<ScenePermissionRequester>();
+        var requester = existing != null
+            ? existing
+            : new GameObject("Scene Permission Requester").AddComponent<ScenePermissionRequester>();
+        requester.Configure(surfaceAuthoring);
     }
 
 #if UNITY_EDITOR
