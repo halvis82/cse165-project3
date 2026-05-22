@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="330" viewBox="0 0 1060 330" font-family="Helvetica, Arial, sans-serif">
+  <style>
+    .panel { fill:#ffffff; stroke:#c9ced6; stroke-width:1.5; }
+    .bar { fill:#eef2f7; }
+    .title { font-size:13px; font-weight:bold; fill:#1a2433; }
+    .cap { font-size:11.5px; fill:#3c4654; }
+    .floor { stroke:#2b8a8f; stroke-width:3; }
+    .wall { stroke:#d4762f; stroke-width:6; }
+    .ray { stroke:#2f6df0; stroke-width:2.5; stroke-dasharray:6 4; }
+    .arrow { stroke:#2f6df0; stroke-width:3; }
+    .person { stroke:#222; stroke-width:2.5; fill:none; }
+    .agentBody { fill:#2f56c9; }
+    .reticle { fill:#27c06a; }
+    .label { font-size:10.5px; fill:#5b6675; }
+  </style>
+  <text x="20" y="22" class="title">Storyboard 1 (implemented): Aim the right hand, then pinch the left to send the agent</text>
+
+  <!-- Panel 1: Before -->
+  <g transform="translate(20,38)">
+    <rect class="panel" width="240" height="250" rx="6"/>
+    <rect class="bar" width="240" height="26" rx="6"/>
+    <text x="10" y="18" class="title">1. Before</text>
+    <!-- user -->
+    <circle class="person" cx="48" cy="78" r="11"/>
+    <line class="person" x1="48" y1="89" x2="48" y2="140"/>
+    <line class="person" x1="48" y1="100" x2="30" y2="120"/>
+    <line class="person" x1="48" y1="100" x2="70" y2="118"/>
+    <line class="person" x1="48" y1="140" x2="34" y2="172"/>
+    <line class="person" x1="48" y1="140" x2="62" y2="172"/>
+    <text x="30" y="190" class="label">user</text>
+    <!-- floor + agent -->
+    <line class="floor" x1="120" y1="175" x2="225" y2="175"/>
+    <rect class="agentBody" x="168" y="138" width="22" height="30" rx="3"/>
+    <circle class="agentBody" cx="179" cy="128" r="10"/>
+    <text x="150" y="190" class="label">agent idle</text>
+    <text x="10" y="218" class="cap">Passthrough shows the real</text>
+    <text x="10" y="233" class="cap">room. The agent stands on</text>
+    <text x="10" y="248" class="cap">the anchored floor.</text>
+  </g>
+
+  <!-- Panel 2: Aim -->
+  <g transform="translate(275,38)">
+    <rect class="panel" width="240" height="250" rx="6"/>
+    <rect class="bar" width="240" height="26" rx="6"/>
+    <text x="10" y="18" class="title">2. Aim</text>
+    <circle class="person" cx="44" cy="78" r="11"/>
+    <line class="person" x1="44" y1="89" x2="44" y2="140"/>
+    <line class="person" x1="44" y1="100" x2="28" y2="120"/>
+    <!-- aiming arm to the target -->
+    <line class="person" x1="44" y1="100" x2="92" y2="120"/>
+    <line class="person" x1="44" y1="140" x2="30" y2="172"/>
+    <line class="person" x1="44" y1="140" x2="58" y2="172"/>
+    <!-- ray from hand -->
+    <line class="ray" x1="92" y1="120" x2="196" y2="168"/>
+    <line class="floor" x1="120" y1="175" x2="225" y2="175"/>
+    <circle class="reticle" cx="196" cy="170" r="7"/>
+    <text x="150" y="192" class="label">reticle</text>
+    <text x="10" y="218" class="cap">The aim ray follows the hand</text>
+    <text x="10" y="233" class="cap">direction in any pose. A reticle</text>
+    <text x="10" y="248" class="cap">previews the floor target.</text>
+  </g>
+
+  <!-- Panel 3: Commit -->
+  <g transform="translate(530,38)">
+    <rect class="panel" width="240" height="250" rx="6"/>
+    <rect class="bar" width="240" height="26" rx="6"/>
+    <text x="10" y="18" class="title">3. Commit</text>
+    <!-- left hand pinch glyph: thumb + index touching -->
+    <g transform="translate(70,70)">
+      <path d="M 30 60 q -26 -4 -28 -34" fill="none" stroke="#c98a2f" stroke-width="9" stroke-linecap="round"/>
+      <path d="M 30 60 q 22 -10 18 -40" fill="none" stroke="#c98a2f" stroke-width="9" stroke-linecap="round"/>
+      <circle cx="34" cy="22" r="7" fill="#27c06a"/>
+      <text x="-6" y="92" class="label">left hand pinch</text>
+    </g>
+    <text x="10" y="218" class="cap">A left thumb and index pinch</text>
+    <text x="10" y="233" class="cap">commits the destination. Preview</text>
+    <text x="10" y="248" class="cap">and commit stay separate.</text>
+  </g>
+
+  <!-- Panel 4: After -->
+  <g transform="translate(785,38)">
+    <rect class="panel" width="240" height="250" rx="6"/>
+    <rect class="bar" width="240" height="26" rx="6"/>
+    <text x="10" y="18" class="title">4. After</text>
+    <line class="floor" x1="20" y1="175" x2="225" y2="175"/>
+    <line class="wall" x1="206" y1="120" x2="206" y2="176"/>
+    <text x="180" y="112" class="label">wall</text>
+    <!-- agent walked to reticle, near wall -->
+    <circle class="reticle" cx="172" cy="170" r="7"/>
+    <rect class="agentBody" x="150" y="138" width="22" height="30" rx="3"/>
+    <circle class="agentBody" cx="161" cy="128" r="10"/>
+    <!-- path arrow -->
+    <line class="arrow" x1="40" y1="170" x2="140" y2="170" marker-end="url(#ah)"/>
+    <text x="10" y="218" class="cap">The agent walks to the target</text>
+    <text x="10" y="233" class="cap">and stops at the anchored wall</text>
+    <text x="10" y="248" class="cap">instead of passing through it.</text>
+  </g>
+
+  <defs>
+    <marker id="ah" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#2f6df0"/>
+    </marker>
+  </defs>
+</svg>

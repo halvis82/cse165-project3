@@ -1,39 +1,73 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="360" viewBox="0 0 1400 360">
-  <rect width="1400" height="360" fill="#f8fafc"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="330" viewBox="0 0 1060 330" font-family="Helvetica, Arial, sans-serif">
   <style>
-    text{font-family:Arial,sans-serif;fill:#182230}
-    .title{font-size:28px;font-weight:bold}
-    .label{font-size:18px}
-    .panel{fill:white;stroke:#bbf7d0;stroke-width:3;rx:18}
+    .panel { fill:#ffffff; stroke:#c9ced6; stroke-width:1.5; }
+    .bar { fill:#eef2f7; }
+    .title { font-size:13px; font-weight:bold; fill:#1a2433; }
+    .cap { font-size:11.5px; fill:#3c4654; }
+    .floor { stroke:#2b8a8f; stroke-width:3; }
+    .vec { stroke:#27a35a; stroke-width:3.5; }
+    .agentBody { fill:#2f56c9; }
+    .label { font-size:10.5px; fill:#5b6675; }
+    .handL { fill:#7a52c9; }
+    .handR { fill:#c98a2f; }
   </style>
-  <text x="30" y="42" class="title">Storyboard 3 - Two-hand vector</text>
-  <g transform="translate(30,70)">
-    <rect class="panel" x="0" y="0" width="310" height="240"/>
-    <circle cx="108" cy="140" r="18" fill="#16a34a"/>
-    <circle cx="208" cy="110" r="18" fill="#16a34a"/>
-    <text x="18" y="32" class="label">1. User raises both hands</text>
-    <text x="18" y="210" class="label">Left hand anchors origin.</text>
+  <text x="20" y="22" class="title">Storyboard 3 (alternative): Two hands define an origin and a direction vector</text>
+
+  <g transform="translate(20,38)">
+    <rect class="panel" width="240" height="250" rx="6"/>
+    <rect class="bar" width="240" height="26" rx="6"/>
+    <text x="10" y="18" class="title">1. Before</text>
+    <circle class="handL" cx="70" cy="120" r="12"/>
+    <text x="40" y="150" class="label">left hand origin</text>
+    <line class="floor" x1="120" y1="175" x2="225" y2="175"/>
+    <rect class="agentBody" x="160" y="138" width="22" height="30" rx="3"/>
+    <circle class="agentBody" cx="171" cy="128" r="10"/>
+    <text x="10" y="218" class="cap">The left hand is raised to mark</text>
+    <text x="10" y="233" class="cap">the origin of the vector that</text>
+    <text x="10" y="248" class="cap">will steer the agent.</text>
   </g>
-  <g transform="translate(365,70)">
-    <rect class="panel" x="0" y="0" width="310" height="240"/>
-    <circle cx="108" cy="140" r="18" fill="#16a34a"/>
-    <circle cx="238" cy="94" r="18" fill="#16a34a"/>
-    <line x1="108" y1="140" x2="238" y2="94" stroke="#16a34a" stroke-width="8"/>
-    <text x="18" y="32" class="label">2. Right hand defines vector</text>
-    <text x="18" y="210" class="label">Direction follows hand spacing.</text>
+
+  <g transform="translate(275,38)">
+    <rect class="panel" width="240" height="250" rx="6"/>
+    <rect class="bar" width="240" height="26" rx="6"/>
+    <text x="10" y="18" class="title">2. Vector</text>
+    <circle class="handL" cx="50" cy="135" r="11"/>
+    <circle class="handR" cx="180" cy="80" r="11"/>
+    <line class="vec" x1="60" y1="130" x2="170" y2="86" marker-end="url(#ah3)"/>
+    <text x="36" y="160" class="label">left</text>
+    <text x="168" y="108" class="label">right</text>
+    <text x="10" y="218" class="cap">The right hand sets the</text>
+    <text x="10" y="233" class="cap">direction. The line between the</text>
+    <text x="10" y="248" class="cap">hands is the travel vector.</text>
   </g>
-  <g transform="translate(700,70)">
-    <rect class="panel" x="0" y="0" width="310" height="240"/>
-    <line x1="110" y1="150" x2="235" y2="105" stroke="#16a34a" stroke-width="8"/>
-    <polygon points="235,105 213,97 220,120" fill="#16a34a"/>
-    <text x="18" y="32" class="label">3. Release confirms</text>
-    <text x="18" y="210" class="label">Vector becomes destination intent.</text>
+
+  <g transform="translate(530,38)">
+    <rect class="panel" width="240" height="250" rx="6"/>
+    <rect class="bar" width="240" height="26" rx="6"/>
+    <text x="10" y="18" class="title">3. Commit</text>
+    <line class="vec" x1="40" y1="130" x2="190" y2="80" marker-end="url(#ah3)"/>
+    <text x="70" y="155" class="label">release to commit</text>
+    <text x="10" y="218" class="cap">Releasing the pose commits the</text>
+    <text x="10" y="233" class="cap">vector as the destination</text>
+    <text x="10" y="248" class="cap">heading for the agent.</text>
   </g>
-  <g transform="translate(1035,70)">
-    <rect class="panel" x="0" y="0" width="310" height="240"/>
-    <circle cx="205" cy="125" r="24" fill="#16a34a"/>
-    <path d="M80 170 C120 168,160 148,195 130" stroke="#16a34a" stroke-width="6" fill="none" stroke-dasharray="10 10"/>
-    <text x="18" y="32" class="label">4. Agent follows vector</text>
-    <text x="18" y="210" class="label">Precise, but more effortful.</text>
+
+  <g transform="translate(785,38)">
+    <rect class="panel" width="240" height="250" rx="6"/>
+    <rect class="bar" width="240" height="26" rx="6"/>
+    <text x="10" y="18" class="title">4. After</text>
+    <line class="floor" x1="20" y1="175" x2="225" y2="175"/>
+    <line class="vec" x1="40" y1="168" x2="150" y2="140" marker-end="url(#ah3)"/>
+    <rect class="agentBody" x="158" y="120" width="22" height="30" rx="3"/>
+    <circle class="agentBody" cx="169" cy="110" r="10"/>
+    <text x="10" y="218" class="cap">The agent travels along the</text>
+    <text x="10" y="233" class="cap">vector. This is precise but asks</text>
+    <text x="10" y="248" class="cap">more of the user.</text>
   </g>
+
+  <defs>
+    <marker id="ah3" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#27a35a"/>
+    </marker>
+  </defs>
 </svg>
