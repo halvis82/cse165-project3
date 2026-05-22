@@ -14,6 +14,15 @@ public static class QuestCameraPoseUtility
             return;
         }
 
+        // Passthrough only shows through where the camera framebuffer is
+        // transparent. A default camera clears with the Skybox (opaque), which
+        // hides passthrough behind a solid "void". Clear to transparent black
+        // so the OpenXR runtime composites the real-world passthrough behind
+        // the rendered agent/hands.
+        var camera = cameraObject.GetComponent<Camera>() ?? cameraObject.AddComponent<Camera>();
+        camera.clearFlags = CameraClearFlags.SolidColor;
+        camera.backgroundColor = new Color(0f, 0f, 0f, 0f);
+
 #if ENABLE_INPUT_SYSTEM
         var driver = cameraObject.GetComponent<TrackedPoseDriver>() ??
                      cameraObject.AddComponent<TrackedPoseDriver>();

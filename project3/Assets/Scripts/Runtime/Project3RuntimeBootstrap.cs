@@ -119,7 +119,7 @@ public static class Project3RuntimeBootstrap
         var navigator = root.AddComponent<AgentNavigator>();
         var mixamoCharacter = Resources.Load<GameObject>("MixamoBeetlejuice/Models/BeetleJuiceMixamo");
         var prototype = Resources.Load<GameObject>("PrototypeHumanoid/Character/Models/DefaultMale");
-        var runtimeController = Resources.Load<RuntimeAnimatorController>("PrototypeHumanoid/Animation/zJog_SM");
+        var runtimeController = Resources.Load<RuntimeAnimatorController>("PrototypeHumanoid/Animation/AgentLocomotion");
 
         if (mixamoCharacter != null)
         {
@@ -193,7 +193,7 @@ public static class Project3RuntimeBootstrap
             return;
         }
 
-        var runtimeController = Resources.Load<RuntimeAnimatorController>("PrototypeHumanoid/Animation/zJog_SM");
+        var runtimeController = Resources.Load<RuntimeAnimatorController>("PrototypeHumanoid/Animation/AgentLocomotion");
         var animator = binder.GetComponent<Animator>() ?? binder.gameObject.AddComponent<Animator>();
         animator.runtimeAnimatorController = runtimeController;
         animator.applyRootMotion = false;

@@ -16,6 +16,7 @@ public sealed class AgentNavigator : MonoBehaviour
     private CharacterController characterController;
     private Vector3 destination;
     private bool hasDestination;
+    private float blockedTimer;
 
     public event Action<Vector3> DestinationAccepted;
     public event Action<Vector3> DestinationReached;
@@ -92,8 +93,38 @@ public sealed class AgentNavigator : MonoBehaviour
             return;
         }
 
-        characterController.Move(direction * allowedDistance);
-        CurrentSpeedMetersPerSecond = Time.deltaTime > 0f ? allowedDistance / Time.deltaTime : 0f;
+        var positionBeforeMove = transform.position;
+        var flags = characterController.Move(direction * allowedDistance);
+
+        // The CharacterController physically stops at wall colliders even when
+        // the look-ahead sphere cast missed (SphereCast ignores a wall it is
+        // already touching). Detect that case by comparing intended vs actual
+        // travel: if he is pressed against a wall and not progressing, stop so
+        // he does not run in place forever.
+        var actualTravel = Vector3.ProjectOnPlane(transform.position - positionBeforeMove, Vector3.up).magnitude;
+        var hitSide = (flags & CollisionFlags.Sides) != 0;
+        if ((hitSide || actualTravel < allowedDistance * 0.25f) && allowedDistance > 0.0005f)
+        {
+            blockedTimer += Time.deltaTime;
+        }
+        else
+        {
+            blockedTimer = 0f;
+        }
+
+        if (blockedTimer >= 0.2f)
+        {
+            blockedTimer = 0f;
+            hasDestination = false;
+            IsBlocked = true;
+            IsMoving = false;
+            CurrentSpeedMetersPerSecond = 0f;
+            NavigationState = "Blocked by room surface";
+            DestinationBlocked?.Invoke();
+            return;
+        }
+
+        CurrentSpeedMetersPerSecond = Time.deltaTime > 0f ? actualTravel / Time.deltaTime : 0f;
         IsMoving = CurrentSpeedMetersPerSecond > 0.01f;
         NavigationState = "Moving";
     }

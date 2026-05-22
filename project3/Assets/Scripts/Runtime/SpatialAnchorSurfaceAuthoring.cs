@@ -116,18 +116,20 @@ public sealed class SpatialAnchorSurfaceAuthoring : MonoBehaviour
             return false;
         }
 
-        var localCenter = new Vector3(plane.center.x, 0f, plane.center.y);
-        var worldCenter = plane.transform.TransformPoint(localCenter);
+        // ARPlane.center is already in world space - do NOT run it through the
+        // plane transform again (that double-transform threw walls high and off
+        // their real position). Anchor the surface at the true world center.
+        var worldCenter = plane.center;
         var anchorPose = new Pose(worldCenter, plane.transform.rotation);
         var anchor = CreateAnchor(plane, anchorPose);
 
         // If the anchor service is unavailable, still build the collider and
         // parent it to the plane itself so the room surface is never dropped.
-        // The anchor sits at the plane center, so its local offset is zero;
-        // the plane transform sits at its own origin, so offset to the center.
+        // The anchor sits at the world center (zero local offset); the plane
+        // transform sits at its own origin, so express the center in its space.
         var anchored = anchor != null;
         var proxyRoot = anchored ? anchor.transform : plane.transform;
-        var localOffset = anchored ? Vector3.zero : localCenter;
+        var localOffset = anchored ? Vector3.zero : plane.transform.InverseTransformPoint(worldCenter);
         var proxy = CreateProxySurface(proxyRoot, localOffset, plane, kind);
         capturedPlanes.Add(plane.trackableId);
         capturedSurfaces.Add(proxy);
@@ -247,6 +249,20 @@ public sealed class SpatialAnchorSurfaceAuthoring : MonoBehaviour
 
         var surfaceProxy = proxy.AddComponent<SpatialSurfaceProxy>();
         surfaceProxy.Configure(kind, plane.trackableId);
+
+        // Explicitly guarantee a solid BoxCollider. CreatePrimitive's collider
+        // does not survive IL2CPP managed stripping here (BoxCollider was being
+        // stripped because no user code referenced it), leaving the proxy with
+        // no collider at all - which is why the agent passed through walls.
+        // Referencing BoxCollider in code also keeps the stripper from removing it.
+        var box = proxy.GetComponent<BoxCollider>();
+        if (box == null)
+        {
+            box = proxy.AddComponent<BoxCollider>();
+        }
+        box.isTrigger = false;
+        box.center = Vector3.zero;
+        box.size = Vector3.one;
 
         var renderer = proxy.GetComponent<Renderer>();
         if (renderer != null)

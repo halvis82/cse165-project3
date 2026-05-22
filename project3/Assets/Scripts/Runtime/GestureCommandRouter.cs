@@ -79,7 +79,7 @@ public sealed class GestureCommandRouter : MonoBehaviour
     private void UpdateFromHands(XRHandSubsystem subsystem)
     {
         HandsTracked = subsystem.leftHand.isTracked && subsystem.rightHand.isTracked;
-        HasPointingRay = HandPoseUtility.TryGetPointingRay(subsystem.rightHand, out var aimRay);
+        HasPointingRay = HandPoseUtility.TryGetHandAimRay(subsystem.rightHand, out var aimRay);
         hasAimedDestination = false;
 
         if (HasPointingRay)
@@ -117,7 +117,7 @@ public sealed class GestureCommandRouter : MonoBehaviour
         }
         else if (!HasPointingRay)
         {
-            InputStatus = "Point right index finger";
+            InputStatus = "Aim your right hand";
         }
         else if (!hasAimedDestination)
         {

@@ -46,6 +46,70 @@ public static class HandPoseUtility
                distanceMeters <= pinchDistanceMeters;
     }
 
+    // Aim ray straight along the hand/arm, regardless of finger pose (finger,
+    // fist, open hand - all work). Origin at the knuckles, direction from the
+    // wrist toward the middle knuckle, i.e. wherever the hand/arm is aimed.
+    public static bool TryGetHandAimRay(XRHand hand, out Ray ray)
+    {
+        ray = default;
+
+        if (!TryGetJointPose(hand, XRHandJointID.Wrist, out var wrist) ||
+            !TryGetJointPose(hand, XRHandJointID.MiddleProximal, out var middleKnuckle))
+        {
+            return false;
+        }
+
+        var forward = middleKnuckle.position - wrist.position;
+        if (forward.sqrMagnitude < 0.0001f)
+        {
+            return false;
+        }
+
+        ray = new Ray(middleKnuckle.position, forward.normalized);
+        return true;
+    }
+
+    // Aim ray for a closed fist: all four fingers curled toward the palm. The
+    // ray starts at the knuckles and points along the hand's forward axis
+    // (wrist -> middle knuckle), i.e. where the front of the fist is aimed.
+    public static bool TryGetFistAimRay(XRHand hand, out Ray ray)
+    {
+        ray = default;
+
+        if (!TryGetJointPose(hand, XRHandJointID.Palm, out var palm) ||
+            !TryGetJointPose(hand, XRHandJointID.Wrist, out var wrist) ||
+            !TryGetJointPose(hand, XRHandJointID.MiddleProximal, out var middleKnuckle) ||
+            !TryGetJointPose(hand, XRHandJointID.IndexTip, out var indexTip) ||
+            !TryGetJointPose(hand, XRHandJointID.MiddleTip, out var middleTip) ||
+            !TryGetJointPose(hand, XRHandJointID.RingTip, out var ringTip) ||
+            !TryGetJointPose(hand, XRHandJointID.LittleTip, out var littleTip))
+        {
+            return false;
+        }
+
+        // All four fingertips pulled in close to the palm => curled fist.
+        const float curledThreshold = 0.075f;
+        var fistClosed =
+            Vector3.Distance(palm.position, indexTip.position) <= curledThreshold &&
+            Vector3.Distance(palm.position, middleTip.position) <= curledThreshold &&
+            Vector3.Distance(palm.position, ringTip.position) <= curledThreshold &&
+            Vector3.Distance(palm.position, littleTip.position) <= curledThreshold;
+
+        if (!fistClosed)
+        {
+            return false;
+        }
+
+        var forward = middleKnuckle.position - wrist.position;
+        if (forward.sqrMagnitude < 0.0001f)
+        {
+            return false;
+        }
+
+        ray = new Ray(middleKnuckle.position, forward.normalized);
+        return true;
+    }
+
     public static bool TryGetPointingRay(XRHand hand, out Ray ray)
     {
         ray = default;

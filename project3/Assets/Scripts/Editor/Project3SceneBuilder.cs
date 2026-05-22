@@ -2,6 +2,7 @@ using System.IO;
 using System.Linq;
 using Unity.XR.CoreUtils;
 using UnityEditor;
+using UnityEditor.Animations;
 using UnityEditor.Build.Reporting;
 using UnityEditor.SceneManagement;
 using UnityEditor.XR.Management;
@@ -23,10 +24,13 @@ public static class Project3SceneBuilder
     private const string ProductName = "CSE165 Project 3";
     private const string AndroidPackageName = "edu.ucsd.cse165.project3.embodiedagentar";
 
+    private const string LocomotionControllerPath = "Assets/Resources/PrototypeHumanoid/Animation/AgentLocomotion.controller";
+
     [MenuItem("CSE165 Project 3/Rebuild AR Agent Scene")]
     public static void RebuildScene()
     {
         EnsureDirectories();
+        BuildLocomotionController();
         var materials = CreateMaterials();
         BuildScene(materials);
         ConfigureQuestOpenXR();
@@ -121,6 +125,58 @@ public static class Project3SceneBuilder
         Directory.CreateDirectory("Assets/Prefabs");
         Directory.CreateDirectory("Assets/Scripts/Editor");
         Directory.CreateDirectory("Assets/Scripts/Runtime");
+    }
+
+    // Builds a single-state Walk controller. The project has no usable idle
+    // clip (the only candidate, "Stance", is a T-pose reference), so the agent
+    // walks while moving and the walk is frozen in place when stopped, which
+    // reads as a neutral standing pose. Driver toggles animator.speed.
+    private static void BuildLocomotionController()
+    {
+        var walk = LoadFbxClip("Assets/Resources/PrototypeHumanoid/Animation/Nav-Accelerations.fbx", "Walk", false);
+        if (walk == null)
+        {
+            Debug.LogWarning("Walk clip missing; keeping existing controller.");
+            return;
+        }
+
+        var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(LocomotionControllerPath)
+                         ?? AnimatorController.CreateAnimatorControllerAtPath(LocomotionControllerPath);
+
+        controller.parameters = new AnimatorControllerParameter[0];
+
+        var stateMachine = controller.layers[0].stateMachine;
+        foreach (var existing in stateMachine.states)
+        {
+            stateMachine.RemoveState(existing.state);
+        }
+
+        var walkState = stateMachine.AddState("Walk");
+        walkState.motion = walk;
+        stateMachine.defaultState = walkState;
+
+        EditorUtility.SetDirty(controller);
+        AssetDatabase.SaveAssets();
+        Debug.Log($"Built locomotion controller at {LocomotionControllerPath} (walk='{walk.name}').");
+    }
+
+    private static AnimationClip LoadFbxClip(string fbxPath, string clipName, bool fallbackToFirst)
+    {
+        AnimationClip exact = null;
+        AnimationClip first = null;
+        foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(fbxPath))
+        {
+            if (obj is AnimationClip clip && !clip.name.StartsWith("__preview__"))
+            {
+                first ??= clip;
+                if (clip.name == clipName)
+                {
+                    exact = clip;
+                }
+            }
+        }
+
+        return exact ?? (fallbackToFirst ? first : null);
     }
 
     private static MaterialSet CreateMaterials()
@@ -241,7 +297,7 @@ public static class Project3SceneBuilder
         var navigator = root.AddComponent<AgentNavigator>();
         var mixamoCharacter = Resources.Load<GameObject>("MixamoBeetlejuice/Models/BeetleJuiceMixamo");
         var prototype = Resources.Load<GameObject>("PrototypeHumanoid/Character/Models/DefaultMale");
-        var runtimeController = Resources.Load<RuntimeAnimatorController>("PrototypeHumanoid/Animation/zJog_SM");
+        var runtimeController = Resources.Load<RuntimeAnimatorController>("PrototypeHumanoid/Animation/AgentLocomotion");
 
         if (mixamoCharacter != null)
         {
