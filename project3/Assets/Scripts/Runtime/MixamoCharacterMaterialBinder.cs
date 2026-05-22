@@ -3,9 +3,7 @@ using UnityEngine;
 public sealed class MixamoCharacterMaterialBinder : MonoBehaviour
 {
     private const string BodyTexturePath = "MixamoBeetlejuice/Textures/Body";
-    private const string BodyNormalPath = "MixamoBeetlejuice/Textures/Body_N";
     private const string HeadTexturePath = "MixamoBeetlejuice/Textures/Head";
-    private const string HeadNormalPath = "MixamoBeetlejuice/Textures/Head_N";
 
     [SerializeField] private Material bodyMaterial;
     [SerializeField] private Material headMaterial;
@@ -32,12 +30,12 @@ public sealed class MixamoCharacterMaterialBinder : MonoBehaviour
     {
         if (bodyMaterial == null)
         {
-            bodyMaterial = CreateMaterial("Beetlejuice Body Material", BodyTexturePath, BodyNormalPath);
+            bodyMaterial = CreateMaterial("Beetlejuice Body Material", BodyTexturePath);
         }
 
         if (headMaterial == null)
         {
-            headMaterial = CreateMaterial("Beetlejuice Head Material", HeadTexturePath, HeadNormalPath);
+            headMaterial = CreateMaterial("Beetlejuice Head Material", HeadTexturePath);
         }
 
         ForceOpaqueDoubleSided(bodyMaterial);
@@ -51,36 +49,17 @@ public sealed class MixamoCharacterMaterialBinder : MonoBehaviour
 
         for (var i = 0; i < renderers.Length; i++)
         {
+            ConfigureRendererForQuest(renderers[i]);
             var targetMaterial = IsBodyRenderer(renderers[i], i) ? bodyMaterial : headMaterial;
             AssignMaterial(renderers[i], targetMaterial, headMaterial, i == 0 && renderers.Length == 1);
         }
     }
 
-    private static Material CreateMaterial(string materialName, string albedoResourcePath, string normalResourcePath)
+    private static Material CreateMaterial(string materialName, string albedoResourcePath)
     {
-        var material = new Material(Shader.Find("Standard"))
-        {
-            name = materialName,
-            color = Color.white
-        };
-
-        ForceOpaqueDoubleSided(material);
-
         var albedo = Resources.Load<Texture2D>(albedoResourcePath);
-        if (albedo != null)
-        {
-            material.mainTexture = albedo;
-            material.SetTexture("_MainTex", albedo);
-        }
-
-        var normal = Resources.Load<Texture2D>(normalResourcePath);
-        if (normal != null)
-        {
-            material.SetTexture("_BumpMap", normal);
-            material.EnableKeyword("_NORMALMAP");
-        }
-
-        material.SetFloat("_Glossiness", 0.25f);
+        var material = Project3MaterialUtility.CreateUnlitTexture(materialName, albedo);
+        ForceOpaqueDoubleSided(material);
         return material;
     }
 
@@ -92,16 +71,24 @@ public sealed class MixamoCharacterMaterialBinder : MonoBehaviour
         }
 
         material.color = Color.white;
-        material.SetFloat("_Mode", 0f);
-        material.SetOverrideTag("RenderType", "Opaque");
-        material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
-        material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
-        material.SetInt("_ZWrite", 1);
-        material.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
-        material.DisableKeyword("_ALPHATEST_ON");
-        material.DisableKeyword("_ALPHABLEND_ON");
-        material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-        material.renderQueue = -1;
+        Project3MaterialUtility.ConfigureVisibility(material, false);
+    }
+
+    private static void ConfigureRendererForQuest(Renderer renderer)
+    {
+        if (renderer == null)
+        {
+            return;
+        }
+
+        renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        renderer.receiveShadows = false;
+
+        if (renderer is SkinnedMeshRenderer skinnedMeshRenderer)
+        {
+            skinnedMeshRenderer.updateWhenOffscreen = true;
+            skinnedMeshRenderer.localBounds = new Bounds(Vector3.up * 0.9f, new Vector3(2.5f, 2.5f, 2.5f));
+        }
     }
 
     private static bool IsBodyRenderer(Renderer renderer, int rendererIndex)

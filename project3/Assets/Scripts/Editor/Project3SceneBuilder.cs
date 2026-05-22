@@ -142,22 +142,34 @@ public static class Project3SceneBuilder
         var material = AssetDatabase.LoadAssetAtPath<Material>(path);
         if (material == null)
         {
-            material = new Material(Shader.Find("Standard"));
+            material = new Material(Shader.Find("Standard") ?? Shader.Find("Unlit/Color"));
             AssetDatabase.CreateAsset(material, path);
         }
 
+        material.shader = Shader.Find("Standard") ?? material.shader;
         material.color = color;
-        if (color.a < 1f)
+        if (material.HasProperty("_Color"))
         {
-            material.SetFloat("_Mode", 3f);
-            material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-            material.SetInt("_ZWrite", 0);
-            material.DisableKeyword("_ALPHATEST_ON");
-            material.EnableKeyword("_ALPHABLEND_ON");
-            material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-            material.renderQueue = 3000;
+            material.SetColor("_Color", color);
         }
+
+        if (material.HasProperty("_EmissionColor"))
+        {
+            material.SetColor("_EmissionColor", color);
+            material.EnableKeyword("_EMISSION");
+        }
+
+        if (material.HasProperty("_Glossiness"))
+        {
+            material.SetFloat("_Glossiness", 0f);
+        }
+
+        if (material.HasProperty("_Metallic"))
+        {
+            material.SetFloat("_Metallic", 0f);
+        }
+
+        Project3MaterialUtility.ConfigureVisibility(material, color.a < 1f);
 
         EditorUtility.SetDirty(material);
         return material;
@@ -185,6 +197,7 @@ public static class Project3SceneBuilder
         cameraObject.AddComponent<AudioListener>();
         cameraObject.AddComponent<ARCameraManager>();
         cameraObject.AddComponent<ARCameraBackground>();
+        QuestCameraPoseUtility.EnsureHeadTrackedCamera(cameraObject);
         xrOrigin.Camera = camera;
 
         var planeManager = originObject.AddComponent<ARPlaneManager>();
@@ -244,14 +257,9 @@ public static class Project3SceneBuilder
             AgentVisualUtility.FitVisualToHeight(visual.transform, controller.height * 0.96f);
 
             var animator = visual.GetComponent<Animator>() ?? visual.AddComponent<Animator>();
-            var controllerWithMixamoMotion = MixamoAnimationUtility.CreateOverrideController(
-                runtimeController,
-                "MixamoBeetlejuice/Models/BeetleJuiceMixamo");
-            if (controllerWithMixamoMotion != null)
-            {
-                animator.runtimeAnimatorController = controllerWithMixamoMotion;
-            }
+            animator.runtimeAnimatorController = runtimeController;
             animator.applyRootMotion = false;
+            animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
 
             var driver = root.AddComponent<AgentAnimationDriver>();
             driver.Configure(navigator, animator);

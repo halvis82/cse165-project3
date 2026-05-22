@@ -125,6 +125,27 @@ public sealed class SpatialAnchorSurfaceAuthoring : MonoBehaviour
         return true;
     }
 
+    public void RegisterFallbackSurface(SpatialSurfaceProxy proxy)
+    {
+        if (proxy == null || capturedSurfaces.Contains(proxy))
+        {
+            return;
+        }
+
+        capturedSurfaces.Add(proxy);
+
+        if (proxy.Kind == SpatialSurfaceKind.Floor)
+        {
+            floorCaptured = true;
+        }
+        else
+        {
+            wallCount++;
+        }
+
+        SurfaceCaptured?.Invoke(proxy);
+    }
+
     private void HandlePlanesChanged(ARPlanesChangedEventArgs args)
     {
         for (var i = 0; i < args.added.Count; i++)

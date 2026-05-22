@@ -77,10 +77,7 @@ public sealed class HandJointVisualizer : MonoBehaviour
 
     private static Material CreateMaterial(Color color)
     {
-        return new Material(Shader.Find("Standard"))
-        {
-            color = color
-        };
+        return Project3MaterialUtility.CreateUnlitColor("Hand Joint Material", color);
     }
 
     private void UpdateMarkers(XRHand hand, Dictionary<XRHandJointID, Transform> markers)

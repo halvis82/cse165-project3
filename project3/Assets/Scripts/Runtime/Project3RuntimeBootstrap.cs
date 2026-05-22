@@ -8,11 +8,11 @@ public static class Project3RuntimeBootstrap
     private static void EnsureProject3Scene()
     {
         var existingAgent = Object.FindObjectOfType<AgentNavigator>();
-        if (existingAgent != null &&
-            Object.FindObjectOfType<SpatialAnchorSurfaceAuthoring>() != null &&
-            Object.FindObjectOfType<GestureCommandRouter>() != null)
+        var existingSurfaceAuthoring = Object.FindObjectOfType<SpatialAnchorSurfaceAuthoring>();
+        var existingGestureRouter = Object.FindObjectOfType<GestureCommandRouter>();
+        if (existingAgent != null && existingSurfaceAuthoring != null && existingGestureRouter != null)
         {
-            EnsureProceduralWalk(existingAgent);
+            RepairExistingScene(existingAgent, existingSurfaceAuthoring);
             return;
         }
 
@@ -54,6 +54,7 @@ public static class Project3RuntimeBootstrap
         var surfaceAuthoringObject = new GameObject("Spatial Anchor Surface Authoring");
         var surfaceAuthoring = surfaceAuthoringObject.AddComponent<SpatialAnchorSurfaceAuthoring>();
         surfaceAuthoring.Configure(planeManager, anchorManager, materialSet.Floor, materialSet.Wall, materialSet.Anchor);
+        CreateFallbackRoomProxies(surfaceAuthoring, materialSet.Floor, materialSet.Wall);
 
         var gestureObject = new GameObject("Gesture Command Router");
         var gestureRouter = gestureObject.AddComponent<GestureCommandRouter>();
@@ -63,10 +64,31 @@ public static class Project3RuntimeBootstrap
         handDebug.AddComponent<HandJointVisualizer>();
 
         CreateStatusPanel(camera, gestureRouter, surfaceAuthoring, agent);
+        Debug.Log($"Project3 runtime scene created. Registered surfaces: floors={surfaceAuthoring.FloorCount}, walls={surfaceAuthoring.WallCount}.");
 
 #if UNITY_EDITOR
         CreateEditorTestRoom(materialSet.EditorRoom);
 #endif
+    }
+
+    private static void RepairExistingScene(AgentNavigator agent, SpatialAnchorSurfaceAuthoring surfaceAuthoring)
+    {
+        var materialSet = RuntimeMaterialSet.Create();
+
+        var cameraObject = Camera.main != null ? Camera.main.gameObject : GameObject.Find("Main Camera");
+        if (cameraObject != null)
+        {
+            QuestCameraPoseUtility.EnsureHeadTrackedCamera(cameraObject);
+        }
+
+        var planeManager = Object.FindObjectOfType<ARPlaneManager>();
+        var anchorManager = Object.FindObjectOfType<ARAnchorManager>();
+        surfaceAuthoring.Configure(planeManager, anchorManager, materialSet.Floor, materialSet.Wall, materialSet.Anchor);
+        CreateFallbackRoomProxies(surfaceAuthoring, materialSet.Floor, materialSet.Wall);
+        Debug.Log($"Project3 runtime repaired. Registered surfaces: floors={surfaceAuthoring.FloorCount}, walls={surfaceAuthoring.WallCount}.");
+
+        EnsureCharacterMaterials();
+        ConfigureExistingAgentAnimation(agent);
     }
 
     private static T EnsureComponent<T>(string objectName) where T : Component
@@ -112,14 +134,18 @@ public static class Project3RuntimeBootstrap
             AgentVisualUtility.FitVisualToHeight(visual.transform, controller.height * 0.96f);
 
             var animator = visual.GetComponent<Animator>() ?? visual.AddComponent<Animator>();
-            var controllerWithMixamoMotion = MixamoAnimationUtility.CreateOverrideController(runtimeController, "MixamoBeetlejuice/Models/BeetleJuiceMixamo");
-            if (controllerWithMixamoMotion != null) animator.runtimeAnimatorController = controllerWithMixamoMotion;
+            animator.runtimeAnimatorController = runtimeController;
             animator.applyRootMotion = false;
             animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
 
             var driver = root.AddComponent<AgentAnimationDriver>();
             driver.Configure(navigator, animator);
-            AttachProceduralWalk(visual, navigator);
+            if (runtimeController == null)
+            {
+                AttachProceduralWalk(visual, navigator);
+            }
+
+            Debug.Log($"Project3 Beetlejuice visual created. AnimatorController={(runtimeController != null ? runtimeController.name : "procedural fallback")}, renderers={visual.GetComponentsInChildren<Renderer>(true).Length}.");
         }
         else if (prototype != null)
         {
@@ -145,14 +171,51 @@ public static class Project3RuntimeBootstrap
         return navigator;
     }
 
-    private static void EnsureProceduralWalk(AgentNavigator agent)
+    private static void EnsureCharacterMaterials()
     {
         var binder = Object.FindObjectOfType<MixamoCharacterMaterialBinder>();
         if (binder != null)
         {
             binder.Apply();
+        }
+    }
+
+    private static void ConfigureExistingAgentAnimation(AgentNavigator agent)
+    {
+        if (agent == null)
+        {
+            return;
+        }
+
+        var binder = Object.FindObjectOfType<MixamoCharacterMaterialBinder>();
+        if (binder == null)
+        {
+            return;
+        }
+
+        var runtimeController = Resources.Load<RuntimeAnimatorController>("PrototypeHumanoid/Animation/zJog_SM");
+        var animator = binder.GetComponent<Animator>() ?? binder.gameObject.AddComponent<Animator>();
+        animator.runtimeAnimatorController = runtimeController;
+        animator.applyRootMotion = false;
+        animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+
+        var driver = agent.GetComponent<AgentAnimationDriver>() ?? agent.gameObject.AddComponent<AgentAnimationDriver>();
+        driver.Configure(agent, animator);
+
+        var proceduralWalk = binder.GetComponent<ProceduralMixamoWalkAnimator>();
+        if (runtimeController != null)
+        {
+            if (proceduralWalk != null)
+            {
+                Object.Destroy(proceduralWalk);
+            }
+        }
+        else
+        {
             AttachProceduralWalk(binder.gameObject, agent);
         }
+
+        Debug.Log($"Project3 Beetlejuice visual repaired. AnimatorController={(runtimeController != null ? runtimeController.name : "procedural fallback")}, renderers={binder.GetComponentsInChildren<Renderer>(true).Length}.");
     }
 
     private static void AttachProceduralWalk(GameObject visual, AgentNavigator navigator)
@@ -214,6 +277,89 @@ public static class Project3RuntimeBootstrap
         panel.Configure(camera, gestures, surfaces, agent, textMesh);
     }
 
+    private static void CreateFallbackRoomProxies(
+        SpatialAnchorSurfaceAuthoring surfaceAuthoring,
+        Material floorMaterial,
+        Material wallMaterial)
+    {
+        if (surfaceAuthoring == null || GameObject.Find("Fallback Room Proxies") != null)
+        {
+            return;
+        }
+
+        var root = new GameObject("Fallback Room Proxies");
+        CreateFallbackRoomPrimitive(
+            "Fallback Floor Proxy",
+            root.transform,
+            new Vector3(0f, -0.01f, 2f),
+            new Vector3(5f, 0.02f, 5f),
+            floorMaterial,
+            SpatialSurfaceKind.Floor,
+            surfaceAuthoring);
+        CreateFallbackRoomPrimitive(
+            "Fallback Back Wall Proxy",
+            root.transform,
+            new Vector3(0f, 1f, 4.5f),
+            new Vector3(5f, 2f, 0.05f),
+            wallMaterial,
+            SpatialSurfaceKind.Wall,
+            surfaceAuthoring);
+        CreateFallbackRoomPrimitive(
+            "Fallback Left Wall Proxy",
+            root.transform,
+            new Vector3(-2.5f, 1f, 2f),
+            new Vector3(0.05f, 2f, 5f),
+            wallMaterial,
+            SpatialSurfaceKind.Wall,
+            surfaceAuthoring);
+        CreateFallbackRoomPrimitive(
+            "Fallback Right Wall Proxy",
+            root.transform,
+            new Vector3(2.5f, 1f, 2f),
+            new Vector3(0.05f, 2f, 5f),
+            wallMaterial,
+            SpatialSurfaceKind.Wall,
+            surfaceAuthoring);
+        CreateFallbackRoomPrimitive(
+            "Fallback Front Wall Proxy",
+            root.transform,
+            new Vector3(0f, 1f, -0.5f),
+            new Vector3(5f, 2f, 0.05f),
+            wallMaterial,
+            SpatialSurfaceKind.Wall,
+            surfaceAuthoring);
+    }
+
+    private static void CreateFallbackRoomPrimitive(
+        string name,
+        Transform parent,
+        Vector3 position,
+        Vector3 scale,
+        Material material,
+        SpatialSurfaceKind kind,
+        SpatialAnchorSurfaceAuthoring surfaceAuthoring)
+    {
+        var primitive = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        primitive.name = name;
+        primitive.transform.SetParent(parent, false);
+        primitive.transform.position = position;
+        primitive.transform.localRotation = Quaternion.identity;
+        primitive.transform.localScale = scale;
+
+        var proxy = primitive.AddComponent<SpatialSurfaceProxy>();
+        proxy.Configure(kind, default);
+
+        var renderer = primitive.GetComponent<Renderer>();
+        if (renderer != null)
+        {
+            renderer.sharedMaterial = material;
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
+        }
+
+        surfaceAuthoring.RegisterFallbackSurface(proxy);
+    }
+
 #if UNITY_EDITOR
     private static void CreateEditorTestRoom(Material material)
     {
@@ -263,19 +409,7 @@ public static class Project3RuntimeBootstrap
 
         private static Material CreateMaterial(Color color)
         {
-            var material = new Material(Shader.Find("Standard")) { color = color };
-            if (color.a < 1f)
-            {
-                material.SetFloat("_Mode", 3f);
-                material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-                material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-                material.SetInt("_ZWrite", 0);
-                material.DisableKeyword("_ALPHATEST_ON");
-                material.EnableKeyword("_ALPHABLEND_ON");
-                material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-                material.renderQueue = 3000;
-            }
-            return material;
+            return Project3MaterialUtility.CreateUnlitColor("Runtime Project3 Material", color, color.a < 1f);
         }
     }
 }
